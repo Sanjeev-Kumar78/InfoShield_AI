@@ -1,9 +1,19 @@
 [project]
 name = "infoshield-ai"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Multi-agent disaster information verification system using Google ADK"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "google-genai",
+    "google-adk>=1.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+infoshield = "runner:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
 ]
