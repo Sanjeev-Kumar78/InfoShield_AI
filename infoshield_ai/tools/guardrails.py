@@ -43,6 +43,18 @@ OFF_TOPIC_PATTERNS = [
     r'(weather forecast|temperature tomorrow)',
 ]
 
+# Technical/deployment patterns that must be rejected even if disaster words appear
+TECH_OR_DEV_PATTERNS = [
+    r'how\s+to\s+(deploy|install|build|set\s*up)',
+    r'deploy(ing)?\s+(adk|agent|model|app|application|service)',
+    r'\b(adk|sdk|docker|dockerfile|railway|vercel|cloud\s*run|github|gitlab)\b',
+    r'code\s+(sample|snippet|example)',
+    r'(write|generate)\s+code',
+    r'(api\s+key|api\s+keys)',
+    r'(documentation|docs|tutorial|guide)\s+(for|about)',
+    r'install\s+(the\s+)?dependencies',
+]
+
 
 def validate_query(query: str) -> Dict[str, Any]:
     """
@@ -73,6 +85,15 @@ def validate_query(query: str) -> Dict[str, Any]:
             return {
                 "is_valid": False,
                 "reason": "I'm InfoShield AI, specialized in disaster information verification. I can help you verify disaster reports, check emergency situations, and provide safety information. Please ask about a specific disaster or emergency situation.",
+                "category": "off_topic"
+            }
+
+    # Block technical/deployment/dev-ops requests regardless of disaster context
+    for pattern in TECH_OR_DEV_PATTERNS:
+        if re.search(pattern, query_lower, re.IGNORECASE):
+            return {
+                "is_valid": False,
+                "reason": "I can't switch to development or deployment support. Please keep the conversation focused on verifying an actual disaster situation.",
                 "category": "off_topic"
             }
 
