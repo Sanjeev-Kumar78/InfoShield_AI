@@ -55,7 +55,6 @@ Create a comprehensive verification report using the EXACT format below.
 
 **⚠️ Disclaimer:**
 For life-threatening emergencies, contact local emergency services (911, 112) directly.
-[If credibility score < {CREDIBILITY_THRESHOLD}: Add "⚠️ This query has been flagged for human expert review due to low credibility score."]
 """
 
 

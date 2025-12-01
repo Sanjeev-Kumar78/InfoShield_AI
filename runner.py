@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """InfoShield AI Runner.
 
 Entry point for running the InfoShield disaster verification system.

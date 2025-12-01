@@ -39,8 +39,9 @@ ERROR_MESSAGES = {
 def _extract_credibility_score(response: str) -> Optional[int]:
     """Extract credibility score from agent response."""
     patterns = [
+        r'Credibility Score\s*[|\t]\s*(\d+)/100',  # Pipe or tab separator
         r'Credibility Score\s*\|\s*(\d+)/100',
-        r'Score:\s*(\d+)/100',
+        r'Score[:\s]+(\d+)/100',
         r'credibility[:\s]+(\d+)',
         r'(\d+)/100.*credibility',
     ]
@@ -106,10 +107,17 @@ class MultiAgentRunner:
             import uuid
             self.session_id = f"multi_session_{uuid.uuid4().hex[:8]}"
 
+            # Create session with initial state
+            initial_state = {
+                "query_count": 0,
+                "current_date": datetime.now().strftime("%B %d, %Y"),
+            }
+
             await self.session_service.create_session(
                 app_name=self.orchestrator.name,
                 user_id=self.user_id,
-                session_id=self.session_id
+                session_id=self.session_id,
+                state=initial_state  # Initialize state with memory context
             )
 
             self.runner = Runner(
@@ -217,9 +225,14 @@ class MultiAgentRunner:
                             "review_time": review_result["estimated_review_time"]
                         }
 
-                        # Append notice to response if not already there
-                        if "Human Review Triggered" not in final_response:
-                            final_response += f"""
+                        # Append notice to response (always add proper tracking info)
+                        # Remove any incomplete human review text from synthesizer
+                        final_response = re.sub(
+                            r'This query has been flagged for human expert review\.?\s*Reference ID will be provided\.?',
+                            '',
+                            final_response
+                        )
+                        final_response += f"""
 
 ---
 **🔍 Human Review Triggered**

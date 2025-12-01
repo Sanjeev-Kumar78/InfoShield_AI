@@ -8,20 +8,19 @@ from typing import Dict, Any
 from infoshield_ai.config import DISASTER_KEYWORDS
 
 
-def analyze_query(query: str, inferred_location: str = None) -> Dict[str, Any]:
+def analyze_query(query: str) -> Dict[str, Any]:
     """
     Analyze a disaster-related query for sentiment, urgency, and location.
 
     This tool performs rule-based analysis to extract:
     - Sentiment (panic, urgent, concerned, neutral, curious)
     - Urgency score (1-10)
-    - Location mentioned in the query (or inferred by the agent)
+    - Location mentioned in the query
     - Disaster type if identifiable
     - Emergency indicators
 
     Args:
         query: The user's disaster-related query string.
-        inferred_location: Optional location inferred by the calling agent.
 
     Returns:
         Dictionary containing analysis results with keys:
@@ -33,7 +32,7 @@ def analyze_query(query: str, inferred_location: str = None) -> Dict[str, Any]:
         - keywords_found: list - Disaster keywords detected
 
     Example:
-        >>> result = analyze_query("Help! Flooding in Mumbai!", inferred_location="Mumbai")
+        >>> result = analyze_query("Help! Flooding in Mumbai, water entering houses!")
         >>> result["urgency_score"]
         9
         >>> result["location"]
@@ -76,27 +75,21 @@ def analyze_query(query: str, inferred_location: str = None) -> Dict[str, Any]:
     else:
         sentiment = "neutral"
 
-    # Extract location
+    # Extract location (simple pattern matching)
     location = "Unknown"
+    location_patterns = [
+        r"in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+        r"at\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+        r"near\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+        r"from\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
+        r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:area|region|city|town|district)"
+    ]
 
-    # Use inferred location if provided and valid
-    if inferred_location and inferred_location.lower() != "unknown":
-        location = inferred_location
-    else:
-        # Fallback to regex pattern matching
-        location_patterns = [
-            r"in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
-            r"at\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
-            r"near\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
-            r"from\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)",
-            r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:area|region|city|town|district)"
-        ]
-
-        for pattern in location_patterns:
-            match = re.search(pattern, query)
-            if match:
-                location = match.group(1)
-                break
+    for pattern in location_patterns:
+        match = re.search(pattern, query)
+        if match:
+            location = match.group(1)
+            break
 
     # Identify disaster type
     disaster_type = None
