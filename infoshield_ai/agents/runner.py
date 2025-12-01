@@ -21,6 +21,7 @@ from infoshield_ai.config import (
 )
 from infoshield_ai.agents.orchestrator import create_orchestrator_agent
 from infoshield_ai.tools.human_review import save_for_human_review
+from infoshield_ai.tools.guardrails import validate_query, get_rejection_response
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -148,6 +149,23 @@ class MultiAgentRunner:
         self._query_count += 1
         self._agents_used = []
         start_time = datetime.now()
+
+        # === GUARDRAIL: Validate query before processing ===
+        validation = validate_query(query)
+        if not validation["is_valid"]:
+            logger.info(
+                f"Query rejected by guardrail: {validation['category']}")
+            return {
+                "response": get_rejection_response(validation),
+                "credibility_score": None,
+                "agents_used": ["guardrail"],
+                "human_review": None,
+                "metadata": {
+                    "blocked": True,
+                    "block_reason": validation["category"],
+                    "processing_time": (datetime.now() - start_time).total_seconds()
+                }
+            }
 
         try:
             await self._ensure_initialized()
